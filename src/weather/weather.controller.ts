@@ -1,21 +1,17 @@
-import { Controller, Sse } from '@nestjs/common';
-import { Observable, interval, map } from 'rxjs';
+import { Controller, Sse, Logger } from '@nestjs/common';
+import { Observable, interval, map, take } from 'rxjs';
 import { WeatherService } from './weather.service';
 import { WeatherForecastMessageEvent } from './weather.forecast.message';
 
 @Controller('weather')
-export class WeatherController {
-  private weatherForecast: WeatherForecastMessageEvent;
-  constructor(private readonly weatherService: WeatherService) {
-    interval(5000).subscribe(async () => {
-      this.weatherForecast = await this.weatherService.getWeatherForecast();
-    });
-  }
+export class WeatherController {  
+  private readonly logger = new Logger(WeatherController.name);
+
+  constructor(private readonly weatherService: WeatherService) {}
 
   @Sse('forecast')
-  getWeatherForecast(): Observable<WeatherForecastMessageEvent> {        
-    return interval(5000).pipe(
-      map(() => this.weatherForecast)
-    );
+  getWeatherForecast(): Observable<WeatherForecastMessageEvent> {     
+    this.logger.debug('Get weather forecast NEW stream CONNECTION');
+    return this.weatherService.getWeatherForecast();        
   }
 } 
